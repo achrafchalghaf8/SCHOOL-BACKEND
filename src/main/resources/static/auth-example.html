@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemple d'authentification WebSocket</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Exemple d'authentification WebSocket</h1>
+        
+        <div class="row">
+            <!-- Formulaire d'inscription -->
+            <div id="register-form" class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Inscription</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-register">
+                            <div class="mb-3">
+                                <label for="register-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="register-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-nom" class="form-label">Nom</label>
+                                <input type="text" class="form-control" id="register-nom" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-password" class="form-label">Mot de passe</label>
+                                <input type="password" class="form-control" id="register-password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="register-role" class="form-label">Rôle</label>
+                                <select class="form-select" id="register-role" required>
+                                    <option value="ADMIN">Admin</option>
+                                    <option value="PARENT">Parent</option>
+                                    <option value="ENSEIGNANT">Enseignant</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">S'inscrire</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Formulaire de connexion -->
+            <div id="login-form" class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Connexion</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="form-login">
+                            <div class="mb-3">
+                                <label for="login-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="login-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label">Mot de passe</label>
+                                <input type="password" class="form-control" id="login-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">Se connecter</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profil utilisateur (visible après authentification) -->
+            <div id="user-profile" class="col-md-12 mb-4 hidden">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Profil utilisateur</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>ID:</strong> <span id="user-id"></span></p>
+                                <p><strong>Email:</strong> <span id="user-email"></span></p>
+                                <p><strong>Nom:</strong> <span id="user-nom"></span></p>
+                                <p><strong>Rôle:</strong> <span id="user-role"></span></p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <button id="btn-logout" class="btn btn-danger">Se déconnecter</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Messages d'alerte -->
+        <div id="alert-container"></div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stomp-websocket@2.3.4-next/lib/stomp.min.js"></script>
+    <script src="js/websocket-auth.js"></script>
+    
+    <script>
+        // Fonction pour afficher une alerte
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            alertContainer.appendChild(alertDiv);
+            
+            // Supprimer l'alerte après 5 secondes
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+        
+        // Gestionnaire pour le formulaire d'inscription
+        document.getElementById('form-register').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('register-email').value;
+            const nom = document.getElementById('register-nom').value;
+            const password = document.getElementById('register-password').value;
+            const role = document.getElementById('register-role').value;
+            
+            register(email, nom, password, role);
+        });
+        
+        // Gestionnaire pour le formulaire de connexion
+        document.getElementById('form-login').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            login(email, password);
+        });
+        
+        // Gestionnaire pour le bouton de déconnexion
+        document.getElementById('btn-logout').addEventListener('click', function() {
+            logout();
+        });
+        
+        // Écouteur d'événement pour l'authentification réussie
+        document.addEventListener('auth:success', function(e) {
+            const user = e.detail;
+            
+            // Mettre à jour le profil utilisateur
+            document.getElementById('user-id').textContent = user.id;
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('user-nom').textContent = user.nom;
+            document.getElementById('user-role').textContent = user.role;
+            
+            // Afficher le profil et masquer les formulaires
+            document.getElementById('user-profile').classList.remove('hidden');
+            document.getElementById('register-form').classList.add('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            
+            showAlert('Authentification réussie!', 'success');
+        });
+        
+        // Écouteur d'événement pour l'erreur d'authentification
+        document.addEventListener('auth:error', function(e) {
+            showAlert('Erreur d\'authentification: ' + e.detail, 'danger');
+        });
+        
+        // Écouteur d'événement pour la déconnexion
+        document.addEventListener('auth:logout', function() {
+            // Masquer le profil et afficher les formulaires
+            document.getElementById('user-profile').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+            
+            // Réinitialiser les formulaires
+            document.getElementById('form-register').reset();
+            document.getElementById('form-login').reset();
+            
+            showAlert('Vous avez été déconnecté.', 'info');
+        });
+    </script>
+</body>
+</html>
