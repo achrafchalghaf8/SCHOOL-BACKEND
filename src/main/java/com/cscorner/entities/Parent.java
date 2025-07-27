@@ -1,6 +1,8 @@
 package com.cscorner.entities;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "parents")
@@ -17,6 +19,9 @@ public class Parent {
     @Column(nullable = false)
     private String telephone;
 
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Etudiant> etudiants = new ArrayList<>();
+
     public Parent() {}
 
     public Parent(String telephone) {
@@ -32,6 +37,9 @@ public class Parent {
 
     public String getTelephone() { return telephone; }
     public void setTelephone(String telephone) { this.telephone = telephone; }
+
+    public List<Etudiant> getEtudiants() { return etudiants; }
+    public void setEtudiants(List<Etudiant> etudiants) { this.etudiants = etudiants; }
 
     // Méthodes pratiques pour accéder aux propriétés du compte
     public String getEmail() { return compte != null ? compte.getEmail() : null; }

@@ -24,16 +24,19 @@ public class Cour {
     private String fichier;
 
     private String matiere;
+    
+    private String proprietaire;
 
     @OneToMany(mappedBy = "cour", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Exercice> exercices;
 
     public Cour() {}
 
-    public Cour(Long id, String fichier, String matiere, List<Exercice> exercices) {
+    public Cour(Long id, String fichier, String matiere, String proprietaire, List<Exercice> exercices) {
         this.id = id;
         this.fichier = fichier;
         this.matiere = matiere;
+        this.proprietaire = proprietaire;
         this.exercices = exercices;
     }
 
@@ -47,6 +50,9 @@ public class Cour {
 
     public String getMatiere() { return matiere; }
     public void setMatiere(String matiere) { this.matiere = matiere; }
+    
+    public String getProprietaire() { return proprietaire; }
+    public void setProprietaire(String proprietaire) { this.proprietaire = proprietaire; }
 
     public List<Exercice> getExercices() { return exercices; }
     public void setExercices(List<Exercice> exercices) { this.exercices = exercices; }

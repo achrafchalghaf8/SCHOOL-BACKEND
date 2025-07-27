@@ -42,9 +42,16 @@ public class Compte implements UserDetails {
     )
     private List<Notification> notifications = new ArrayList<>();
 
+    @OneToOne(mappedBy = "compte", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Admin admin;
+
+    @OneToOne(mappedBy = "compte", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Parent parent;
+
+    @OneToOne(mappedBy = "compte", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Enseignant enseignant;
+
     public Compte() {}
-
-
 
     public Compte(Long id, String email, String nom, String password, Role role) {
         this.id = id;
@@ -88,6 +95,15 @@ public class Compte implements UserDetails {
 
     public List<Notification> getNotifications() { return notifications; }
     public void setNotifications(List<Notification> notifications) { this.notifications = notifications; }
+
+    public Admin getAdmin() { return admin; }
+    public void setAdmin(Admin admin) { this.admin = admin; }
+
+    public Parent getParent() { return parent; }
+    public void setParent(Parent parent) { this.parent = parent; }
+
+    public Enseignant getEnseignant() { return enseignant; }
+    public void setEnseignant(Enseignant enseignant) { this.enseignant = enseignant; }
 
     public void addNotification(Notification notification) {
         notifications.add(notification);

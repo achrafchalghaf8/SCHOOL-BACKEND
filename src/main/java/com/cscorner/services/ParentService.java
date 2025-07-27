@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,9 @@ public class ParentService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Transactional
     public ParentDTO createParent(ParentDTO dto) {
@@ -95,11 +99,21 @@ public class ParentService {
 
     @Transactional
     public boolean deleteParent(Long id) {
-        if (parentRepository.existsById(id)) {
-            parentRepository.deleteById(id);
-            return true;
+        try {
+            if (parentRepository.existsById(id)) {
+                // Supprimer d'abord les étudiants associés (relation OneToMany)
+                // Cela sera géré automatiquement par JPA grâce à cascade = CascadeType.ALL
+                
+                // Supprimer le parent (le compte sera supprimé automatiquement grâce à la relation OneToOne)
+                parentRepository.deleteById(id);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la suppression du parent " + id + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
     public String verifyParentSync(Long id) {

@@ -27,6 +27,7 @@ public class CourMapper {
                 cour.getId(),
                 cour.getFichier(),
                 cour.getMatiere(),
+                cour.getProprietaire(),
                 exerciceIds
         );
     }
@@ -41,6 +42,7 @@ public class CourMapper {
                 dto.getId(),
                 dto.getFichier(),
                 dto.getMatiere(),
+                dto.getProprietaire(),
                 exercices
         );
     }

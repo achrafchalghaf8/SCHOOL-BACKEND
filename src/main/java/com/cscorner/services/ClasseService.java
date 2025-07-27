@@ -10,6 +10,7 @@ import com.cscorner.repository.EnseignantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,9 @@ public class ClasseService {
 
     @Autowired
     private ClasseMapper classeMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Transactional
     public ClasseDTO createClasse(ClasseDTO dto) {
@@ -71,11 +75,22 @@ public class ClasseService {
 
     @Transactional
     public boolean deleteClasse(Long id) {
-        if (classeRepository.existsById(id)) {
-            classeRepository.deleteById(id);
-            return true;
+        try {
+            if (classeRepository.existsById(id)) {
+                // Supprimer d'abord les associations ManyToMany
+                jdbcTemplate.update("DELETE FROM enseignant_classe WHERE classe_id = ?", id);
+                jdbcTemplate.update("DELETE FROM exercice_classes WHERE classe_id = ?", id);
+                
+                // Maintenant supprimer la classe (les relations OneToMany seront supprimées automatiquement)
+                classeRepository.deleteById(id);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la suppression de la classe " + id + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
     public List<EnseignantDTO> getEnseignantsByClasseId(Long classeId) {

@@ -18,10 +18,13 @@ public class Classe {
     @OneToMany(mappedBy = "classe", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Etudiant> etudiants = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "classes")
+    @OneToMany(mappedBy = "classe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Emploi> emplois = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "classes", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Exercice> exercices = new ArrayList<>();
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
         name = "enseignant_classe",
         joinColumns = @JoinColumn(name = "classe_id"),
@@ -45,6 +48,9 @@ public class Classe {
 
     public List<Etudiant> getEtudiants() { return etudiants; }
     public void setEtudiants(List<Etudiant> etudiants) { this.etudiants = etudiants; }
+
+    public List<Emploi> getEmplois() { return emplois; }
+    public void setEmplois(List<Emploi> emplois) { this.emplois = emplois; }
 
     public List<Exercice> getExercices() { return exercices; }
     public void setExercices(List<Exercice> exercices) { this.exercices = exercices; }
